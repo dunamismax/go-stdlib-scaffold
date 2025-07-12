@@ -39,11 +39,11 @@ This stack represents a minimalist, robust architecture for building secure and 
 The frontend architecture is intentionally simplified to its core components, delivering a fast, accessible, and extremely maintainable user experience by avoiding all client-side scripting and build tools.
 
 - [**Go `html/template`**](https://pkg.go.dev/html/template)
-    - **Role:** Secure HTML Templating.
-    - **Description:** Go's standard library for server-side HTML rendering. It provides automatic, context-aware escaping to prevent Cross-Site Scripting (XSS), making it a secure foundation for web interfaces.
-- **Plain CSS**
-    - **Role:** Styling.
-    - **Description:** A standard, handwritten CSS file served as a static asset. This approach removes the need for pre-processors or build steps, maximizing simplicity and performance.
+  - **Role:** Secure HTML Templating.
+  - **Description:** Go's standard library for server-side HTML rendering. It provides automatic, context-aware escaping to prevent Cross-Site Scripting (XSS), making it a secure foundation for web interfaces.
+- [**Plain CSS**](https://developer.mozilla.org/en-US/docs/Web/CSS)
+  - **Role:** Styling.
+  - **Description:** A standard, handwritten CSS file served as a static asset. This approach removes the need for pre-processors or build steps, maximizing simplicity and performance.
 
 ---
 
@@ -52,17 +52,17 @@ The frontend architecture is intentionally simplified to its core components, de
 A lean, performant, and maintainable backend service architected using only the Go standard library for maximum stability and minimal external dependencies.
 
 - [**Go**](https://go.dev/doc/)
-    - **Role:** Backend Language.
-    - **Description:** A statically typed, compiled language known for performance, concurrency, and simplicity. It compiles to a single, dependency-free binary, streamlining deployment.
+  - **Role:** Backend Language.
+  - **Description:** A statically typed, compiled language known for performance, concurrency, and simplicity. It compiles to a single, dependency-free binary, streamlining deployment.
 - [**`net/http`**](https://pkg.go.dev/net/http)
-    - **Role:** Web Server & Routing.
-    - **Description:** The standard library's package for all HTTP-related tasks. As of Go 1.22, it includes an enhanced request router that supports method-based routing and wildcards, removing the need for third-party frameworks.
-- **Custom Validation Functions**
-    - **Role:** Data Validation.
-    - **Description:** Data validation is handled by simple, explicit Go functions. This approach keeps validation logic clear, type-safe, and tightly integrated with the application's domain.
+  - **Role:** Web Server & Routing.
+  - **Description:** The standard library's package for all HTTP-related tasks. As of Go 1.22, it includes an enhanced request router that supports method-based routing and wildcards, removing the need for third-party frameworks.
+- [**Custom Validation Functions**](https://www.alexedwards.net/blog/validation-snippets-for-go)
+  - **Role:** Data Validation.
+  - **Description:** Data validation is handled by simple, explicit Go functions. This approach keeps validation logic clear, type-safe, and tightly integrated with the application's domain.
 - [**`os`**](https://pkg.go.dev/os)
-    - **Role:** Environment Variable Loading.
-    - **Description:** Configuration is loaded from environment variables using the standard `os.Getenv` function, adhering to twelve-factor app principles without external libraries.
+  - **Role:** Environment Variable Loading.
+  - **Description:** Configuration is loaded from environment variables using the standard `os.Getenv` function, adhering to twelve-factor app principles without external libraries.
 
 ---
 
@@ -71,17 +71,17 @@ A lean, performant, and maintainable backend service architected using only the 
 A zero-dependency, in-process data layer that maximizes simplicity and speed by using Go's native database interface and basic concurrency primitives.
 
 - [**SQLite**](https://www.sqlite.org/docs.html)
-    - **Role:** Embedded Relational Database.
-    - **Description:** A self-contained, serverless SQL database engine that runs in-process, eliminating operational overhead and making it ideal for a wide range of production workloads.
+  - **Role:** Embedded Relational Database.
+  - **Description:** A self-contained, serverless SQL database engine that runs in-process, eliminating operational overhead and making it ideal for a wide range of production workloads.
 - [**`database/sql`**](https://pkg.go.dev/database/sql)
-    - **Role:** SQL Database Interface.
-    - **Description:** The standard library’s lean interface for SQL databases. It provides direct control over database operations via raw SQL queries, avoiding the overhead of an ORM.
-- **SQL/Go Migration Scripts**
-    - **Role:** Database Schema Migrations.
-    - **Description:** Migrations are managed with numbered SQL files or simple Go programs using `database/sql`. This method avoids external tooling and keeps schema management transparent.
+  - **Role:** SQL Database Interface.
+  - **Description:** The standard library’s lean interface for SQL databases. It provides direct control over database operations via raw SQL queries, avoiding the overhead of an ORM.
+- [**SQL/Go Migration Scripts**](https://amacneil.github.io/dbmate/2022/01/21/go-database-migrations-without-orm.html)
+  - **Role:** Database Schema Migrations.
+  - **Description:** Migrations are managed with numbered SQL files or simple Go programs using `database/sql`. This method avoids external tooling and keeps schema management transparent.
 - [**`sync`**](https://pkg.go.dev/sync)
-    - **Role:** In-Process Caching.
-    - **Description:** High-performance, in-process caching is achieved with a standard Go map and a `sync.RWMutex`, providing a fast, concurrent-safe solution without external dependencies.
+  - **Role:** In-Process Caching.
+  - **Description:** High-performance, in-process caching is achieved with a standard Go map and a `sync.RWMutex`, providing a fast, concurrent-safe solution without external dependencies.
 
 ---
 
@@ -90,8 +90,8 @@ A zero-dependency, in-process data layer that maximizes simplicity and speed by 
 A robust testing suite that relies exclusively on Go's powerful, built-in testing framework to ensure code quality and correctness.
 
 - [**`testing`**](https://pkg.go.dev/testing)
-    - **Role:** Core Testing Framework.
-    - **Description:** The built-in package for unit, integration, and benchmark tests. Assertions use simple `if` statements with `t.Errorf`, keeping tests clear and dependency-free.
+  - **Role:** Core Testing Framework.
+  - **Description:** The built-in package for unit, integration, and benchmark tests. Assertions use simple `if` statements with `t.Errorf`, keeping tests clear and dependency-free.
 
 ---
 
@@ -100,14 +100,14 @@ A robust testing suite that relies exclusively on Go's powerful, built-in testin
 A minimalist toolchain using built-in Go commands and standard, universally available tools for a smooth developer workflow.
 
 - [**`flag`**](https://pkg.go.dev/flag)
-    - **Role:** Command-Line Interface.
-    - **Description:** The standard library's package for parsing command-line options. It is sufficient for building CLIs for most applications without third-party dependencies.
+  - **Role:** Command-Line Interface.
+  - **Description:** The standard library's package for parsing command-line options. It is sufficient for building CLIs for most applications without third-party dependencies.
 - [**Mage / Magefile**](https://magefile.org/)
-    - **Role:** Task Runner / Build System.
-    - **Description:** A build tool that uses plain Go functions as runnable, Makefile-like targets. By replacing shell scripts with Go code, a `Magefile` creates a cross-platform, easy-to-maintain build system for development tasks.
-- **Simple Shell Scripts**
-    - **Role:** Live Reloading.
-    - **Description:** During development, a simple shell script can watch for file changes, automatically recompiling and restarting the server for a rapid feedback loop.
+  - **Role:** Task Runner / Build System.
+  - **Description:** A build tool that uses plain Go functions as runnable, Makefile-like targets. By replacing shell scripts with Go code, a `Magefile` creates a cross-platform, easy-to-maintain build system for development tasks.
+- [**Simple Shell Scripts**](https://dev.to/ignatk/go-live-reloading-with-a-shell-script-2305)
+  - **Role:** Live Reloading.
+  - **Description:** During development, a simple shell script can watch for file changes, automatically recompiling and restarting the server for a rapid feedback loop.
 
 ---
 
@@ -116,12 +116,15 @@ A minimalist toolchain using built-in Go commands and standard, universally avai
 A fully automated pipeline using standard Go tools to build, test, and deploy the application, ensuring consistency and quality.
 
 - [**GitHub Actions**](https://docs.github.com/en/actions)
-    - **Role:** Automated CI/CD Platform.
-    - **Description:** A CI/CD workflow defined in the project repository automates the entire lifecycle. The pipeline performs:
-        - **Linting & Formatting:** Runs [**`gofmt`**](https://pkg.go.dev/cmd/gofmt) and [**`go vet`**](https://pkg.go.dev/cmd/vet) to enforce code style and identify issues.
-        - **Testing:** Executes the test suite with the standard `go test` command.
-        - **Vulnerability Scanning:** Runs [**`govulncheck`**](https://go.dev/blog/vuln) to scan for security vulnerabilities.
-        - **Build:** Compiles the application into a single binary using `go build`.
+  - **Role:** Automated CI/CD Platform.
+  - **Description:** A CI/CD workflow defined in the project repository automates the entire lifecycle. The pipeline performs:
+    - **Linting & Formatting:** Runs [**`gofmt`**](https://pkg.go.dev/cmd/gofmt) and [**`go vet`**](https://pkg.go.dev/cmd/vet) to enforce code style and identify issues.
+    - **Testing:** Executes the test suite with the standard `go test` command.
+    - **Vulnerability Scanning:** Runs [**`govulncheck`**](https://go.dev/blog/vuln) to scan for security vulnerabilities.
+    - **Build:** Compiles the application into a single binary using `go build`.
+- [**`go build` Scripts (via Magefile)**](https://www.digitalocean.com/community/tutorials/how-to-build-go-executables-for-multiple-platforms-on-ubuntu-20-04)
+  - **Role:** Release Automation.
+  - **Description:** A simple script using `go build` with different `GOOS` and `GOARCH` environment variables automates cross-compilation for various platforms without external tools. (Orchestrated and run via the Magefile).
 
 </details>
 
@@ -171,7 +174,7 @@ A fully automated pipeline using standard Go tools to build, test, and deploy th
 
 5. **Run the Application:**
    This project uses [Mage](https://magefile.org/) as a task runner to simplify development workflows. See all available commands by running `mage -l`.
-   
+
    - **Run Migrations:**
      This command builds the CLI and runs the SQL migrations to set up the database schema.
 
