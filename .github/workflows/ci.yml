@@ -36,7 +36,7 @@ jobs:
         run: go install github.com/magefile/mage && go install github.com/golangci/golangci-lint/cmd/golangci-lint && go install golang.org/x/vuln/cmd/govulncheck
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run All Checks (Lint, Test, Vuln)
         run: mage check
