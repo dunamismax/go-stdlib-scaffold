@@ -19,8 +19,5 @@ jobs:
           go-version: '1.24'
           cache: true
 
-      - name: Install Mage
-        run: go install github.com/magefile/mage@latest
-
       - name: Run All Checks
-        run: mage check:all
+        run: go run github.com/magefile/mage check:all

@@ -30,7 +30,11 @@ The primary goal is to provide a structured and scalable environment that relies
 <details>
 <summary><h3>The Pure Go Standard Library Stack (Click to Expand)</h3></summary>
 
-This stack represents a minimalist, robust architecture for building secure and maintainable web applications. It is composed entirely of a Go backend that leverages the standard library, removing all external dependencies for routing, validation, and data access. The stack prioritizes ultimate simplicity, zero-dependency deployment, and long-term stability by relying exclusively on Go's native capabilities. The frontend is reduced to plain HTML and CSS, with no JavaScript.
+# The Pure Go Standard Library Stack
+
+---
+
+This stack represents a minimalist, robust architecture for building secure and performant web applications. It is composed entirely of a Go backend that leverages the standard library, removing all external dependencies. The stack prioritizes ultimate simplicity, zero-dependency deployment, and long-term stability by relying exclusively on Go's continuously evolving native capabilities. The frontend is reduced to plain HTML and CSS, with no JavaScript.
 
 ---
 
@@ -39,49 +43,49 @@ This stack represents a minimalist, robust architecture for building secure and 
 The frontend architecture is intentionally simplified to its core components, delivering a fast, accessible, and extremely maintainable user experience by avoiding all client-side scripting and build tools.
 
 - [**Go `html/template`**](https://pkg.go.dev/html/template)
-  - **Role:** Secure HTML Templating.
-  - **Description:** Go's standard library for server-side HTML rendering. It provides automatic, context-aware escaping to prevent Cross-Site Scripting (XSS), making it a secure foundation for web interfaces.
+    - **Role:** Secure HTML Templating.
+    - **Description:** Go's standard library for server-side HTML rendering. It provides automatic, context-aware escaping to prevent Cross-Site Scripting (XSS). As of Go 1.24, it also supports `range-over-func` and `range-over-int`, allowing for more flexible iteration patterns directly within templates.
 - [**Plain CSS**](https://developer.mozilla.org/en-US/docs/Web/CSS)
-  - **Role:** Styling.
-  - **Description:** A standard, handwritten CSS file served as a static asset. This approach removes the need for pre-processors or build steps, maximizing simplicity and performance.
+    - **Role:** Styling.
+    - **Description:** A standard, handwritten CSS file served as a static asset. This approach removes the need for pre-processors or build steps, maximizing simplicity and performance.
 
 ---
 
 ### **Backend**
 
-A lean, performant, and maintainable backend service architected using only the Go standard library for maximum stability and minimal external dependencies.
+A lean, highly performant, and secure backend service architected using only the Go standard library for maximum stability and minimal attack surface.
 
-- [**Go**](https://go.dev/doc/)
-  - **Role:** Backend Language.
-  - **Description:** A statically typed, compiled language known for performance, concurrency, and simplicity. It compiles to a single, dependency-free binary, streamlining deployment.
+- [**Go (1.24+)**](https://go.dev/doc/)
+    - **Role:** Backend Language.
+    - **Description:** A statically typed, compiled language known for performance, concurrency, and simplicity. The Go 1.22+ `for` loop semantics prevent common concurrency bugs by creating new variables for each iteration. It compiles to a single, dependency-free binary, streamlining deployment.
 - [**`net/http`**](https://pkg.go.dev/net/http)
-  - **Role:** Web Server & Routing.
-  - **Description:** The standard library's package for all HTTP-related tasks. As of Go 1.22, it includes an enhanced request router that supports method-based routing and wildcards, removing the need for third-party frameworks.
+    - **Role:** Web Server & Advanced Routing.
+    - **Description:** The standard library's package for all HTTP-related tasks. As of Go 1.22, the `http.ServeMux` includes an enhanced request router that supports method-based routing (e.g., `POST /items`) and wildcards (e.g., `/items/{id}`), removing the need for third-party frameworks. Path values are easily accessed via `r.PathValue("id")`.
 - [**Custom Validation Functions**](https://www.alexedwards.net/blog/validation-snippets-for-go)
-  - **Role:** Data Validation.
-  - **Description:** Data validation is handled by simple, explicit Go functions. This approach keeps validation logic clear, type-safe, and tightly integrated with the application's domain.
+    - **Role:** Data Validation.
+    - **Description:** Data validation is handled by simple, explicit Go functions. Go 1.24's full support for generic type aliases allows for more reusable and readable validation logic.
 - [**`os`**](https://pkg.go.dev/os)
-  - **Role:** Environment Variable Loading.
-  - **Description:** Configuration is loaded from environment variables using the standard `os.Getenv` function, adhering to twelve-factor app principles without external libraries.
+    - **Role:** Secure Filesystem Access & Environment Loading.
+    - **Description:** Configuration is loaded from environment variables using `os.Getenv`. For file operations, Go 1.24's `os.Root` provides directory-limited filesystem access, preventing directory traversal attacks and ensuring that file-serving or upload handlers operate within a secure boundary.
 
 ---
 
 ### **Database & Caching**
 
-A zero-dependency, in-process data layer that maximizes simplicity and speed by using Go's native database interface and basic concurrency primitives.
+A zero-dependency, in-process data layer that maximizes simplicity and speed by using Go's native database interface and advanced concurrency and memory primitives.
 
 - [**SQLite**](https://www.sqlite.org/docs.html)
-  - **Role:** Embedded Relational Database.
-  - **Description:** A self-contained, serverless SQL database engine that runs in-process, eliminating operational overhead and making it ideal for a wide range of production workloads.
+    - **Role:** Embedded Relational Database.
+    - **Description:** A self-contained, serverless SQL database engine that runs in-process, eliminating operational overhead and making it ideal for a wide range of production workloads.
 - [**`database/sql`**](https://pkg.go.dev/database/sql)
-  - **Role:** SQL Database Interface.
-  - **Description:** The standard library’s lean interface for SQL databases. It provides direct control over database operations via raw SQL queries, avoiding the overhead of an ORM.
+    - **Role:** SQL Database Interface.
+    - **Description:** The standard library’s lean interface for SQL databases. As of Go 1.22, it includes the generic `sql.Null[T]` type, which simplifies scanning nullable columns, reduces boilerplate, and improves type safety.
 - [**SQL/Go Migration Scripts**](https://amacneil.github.io/dbmate/2022/01/21/go-database-migrations-without-orm.html)
-  - **Role:** Database Schema Migrations.
-  - **Description:** Migrations are managed with numbered SQL files or simple Go programs using `database/sql`. This method avoids external tooling and keeps schema management transparent.
-- [**`sync`**](https://pkg.go.dev/sync)
-  - **Role:** In-Process Caching.
-  - **Description:** High-performance, in-process caching is achieved with a standard Go map and a `sync.RWMutex`, providing a fast, concurrent-safe solution without external dependencies.
+    - **Role:** Database Schema Migrations.
+    - **Description:** Migrations are managed with numbered SQL files or simple Go programs using `database/sql`. The concise `for i := range 10` syntax from Go 1.22 can simplify scripting.
+- [**`sync`, `maps` & `unique`**](https://pkg.go.dev/sync)
+    - **Role:** High-Performance In-Process Caching.
+    - **Description:** High-performance, in-process caching is achieved with a standard Go map and a `sync.RWMutex`. As of Go 1.24, map performance is significantly improved due to a new Swiss Table implementation, directly boosting cache speed. For further memory optimization, Go 1.23's `unique` package can be used to canonicalize cache keys or values, reducing memory footprint.
 
 ---
 
@@ -90,41 +94,41 @@ A zero-dependency, in-process data layer that maximizes simplicity and speed by 
 A robust testing suite that relies exclusively on Go's powerful, built-in testing framework to ensure code quality and correctness.
 
 - [**`testing`**](https://pkg.go.dev/testing)
-  - **Role:** Core Testing Framework.
-  - **Description:** The built-in package for unit, integration, and benchmark tests. Assertions use simple `if` statements with `t.Errorf`, keeping tests clear and dependency-free.
+    - **Role:** Core Testing Framework.
+    - **Description:** The built-in package for unit, integration, and benchmark tests. Go 1.24's `go vet` includes a new `tests` analyzer that identifies common mistakes in test declarations. Assertions use simple `if` statements with `t.Errorf`, keeping tests clear and dependency-free.
 
 ---
 
 ### **CLI, Development & Deployment**
 
-A minimalist toolchain using built-in Go commands and standard, universally available tools for a smooth developer workflow.
+A minimalist and modern toolchain using built-in Go commands and standard, universally available tools for a smooth developer workflow.
 
 - [**`flag`**](https://pkg.go.dev/flag)
-  - **Role:** Command-Line Interface.
-  - **Description:** The standard library's package for parsing command-line options. It is sufficient for building CLIs for most applications without third-party dependencies.
-- [**Mage / Magefile**](https://magefile.org/)
-  - **Role:** Task Runner / Build System.
-  - **Description:** A build tool that uses plain Go functions as runnable, Makefile-like targets. By replacing shell scripts with Go code, a `Magefile` creates a cross-platform, easy-to-maintain build system for development tasks.
+    - **Role:** Command-Line Interface.
+    - **Description:** The standard library's package for parsing command-line options. It is sufficient for building CLIs for most applications without third-party dependencies.
+- [**Mage / Magefile (with `go.mod` toolchain)**](https://magefile.org/)
+    - **Role:** Task Runner / Build System.
+    - **Description:** As of Go 1.24, Mage and other build tools are managed declaratively via `tool` directives in the `go.mod` file. This replaces the `tools.go` workaround and ensures version-locked, reproducible builds across all development and CI environments.
 - [**Simple Shell Scripts**](https://dev.to/ignatk/go-live-reloading-with-a-shell-script-2305)
-  - **Role:** Live Reloading.
-  - **Description:** During development, a simple shell script can watch for file changes, automatically recompiling and restarting the server for a rapid feedback loop.
+    - **Role:** Live Reloading.
+    - **Description:** During development, a simple shell script can watch for file changes, automatically recompiling and restarting the server for a rapid feedback loop.
 
 ---
 
 ### **CI/CD**
 
-A fully automated pipeline using standard Go tools to build, test, and deploy the application, ensuring consistency and quality.
+A fully automated, robust pipeline using modern Go tooling to build, test, and deploy the application, ensuring consistency and quality.
 
 - [**GitHub Actions**](https://docs.github.com/en/actions)
-  - **Role:** Automated CI/CD Platform.
-  - **Description:** A CI/CD workflow defined in the project repository automates the entire lifecycle. The pipeline performs:
-    - **Linting & Formatting:** Runs [**`gofmt`**](https://pkg.go.dev/cmd/gofmt) and [**`go vet`**](https://pkg.go.dev/cmd/vet) to enforce code style and identify issues.
-    - **Testing:** Executes the test suite with the standard `go test` command.
-    - **Vulnerability Scanning:** Runs [**`govulncheck`**](https://go.dev/blog/vuln) to scan for security vulnerabilities.
-    - **Build:** Compiles the application into a single binary using `go build`.
+    - **Role:** Automated CI/CD Platform.
+    - **Description:** A CI/CD workflow defined in the project repository automates the entire lifecycle. The pipeline performs:
+        - **Linting & Formatting:** Runs `gofmt` and `go vet` to enforce code style and identify issues.
+        - **Testing:** Executes the test suite with `go test -json`, which (as of Go 1.24) provides structured JSON output for reliable, machine-readable test results.
+        - **Vulnerability Scanning:** Runs `govulncheck` to scan for security vulnerabilities.
+        - **Build:** Compiles the application into a single binary using `go build -json`, capturing structured build information for easier artifact management and error analysis.
 - [**`go build` Scripts (via Magefile)**](https://www.digitalocean.com/community/tutorials/how-to-build-go-executables-for-multiple-platforms-on-ubuntu-20-04)
-  - **Role:** Release Automation.
-  - **Description:** A simple script using `go build` with different `GOOS` and `GOARCH` environment variables automates cross-compilation for various platforms without external tools. (Orchestrated and run via the Magefile).
+    - **Role:** Release Automation.
+    - **Description:** A simple script using `go build` with different `GOOS` and `GOARCH` environment variables automates cross-compilation. Go 1.24 automatically embeds version control information into the binary for improved traceability. The build process benefits from Profile-Guided Optimization (PGO), whose build-time overhead was significantly reduced in Go 1.23.
 
 </details>
 

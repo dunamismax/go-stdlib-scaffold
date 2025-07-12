@@ -93,7 +93,7 @@ func (Check) Vet() error {
 // Test runs all unit tests.
 func (Check) Test() error {
 	fmt.Println("Running tests...")
-	return sh.Run("go", "test", "-v", "./...")
+	return sh.Run("go", "test", "-v", "-json", "./...")
 }
 
 // Vuln scans for vulnerabilities.
@@ -143,7 +143,7 @@ func Release() error {
 			}
 			env := map[string]string{"GOOS": goos, "GOARCH": goarch}
 			fmt.Printf("  - Building for %s/%s\n", goos, goarch)
-			if err := sh.RunWith(env, "go", "build", "-o", name, "./cmd/server"); err != nil {
+			if err := sh.RunWith(env, "go", "build", "-ldflags=-s -w", "-o", name, "./cmd/server"); err != nil {
 				return err
 			}
 		}

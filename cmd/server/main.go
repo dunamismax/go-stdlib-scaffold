@@ -104,8 +104,8 @@ func (app *application) serve(port string) error {
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
-	// Serve static files from the 'public' directory.
-	mux.Handle("/css/", http.FileServer(http.Dir("./public")))
+	// Serve static files from the 'public' directory using the modern os.DirFS.
+	mux.Handle("/css/", http.FileServer(http.FS(os.DirFS("public"))))
 
 	// Register application handlers.
 	mux.HandleFunc("GET /", app.handleIndex)
