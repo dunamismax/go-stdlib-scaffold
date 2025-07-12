@@ -1,0 +1,102 @@
+# -----------------------------------------------------------------------------
+# .gitignore for go-stdlib-scaffold
+#
+# This file is organized into sections for clarity and maintainability.
+# It covers build artifacts, local configurations, dependencies, and common
+# OS/IDE files to ensure the repository remains clean and secure.
+# -----------------------------------------------------------------------------
+
+# --- Build Artifacts & Binaries ---
+# Compiled Go binaries and local build outputs.
+/bin/
+/build/
+
+# Frontend build artifacts. These are generated from the /assets directory.
+/public/assets/
+
+# --- Dependencies ---
+# Node.js dependencies. These should be installed via `npm install`.
+/node_modules/
+
+# --- Local Configuration & Environment ---
+# Environment files contain sensitive credentials and should never be committed.
+# A `.env.example` file should be committed instead to define required variables.
+.env
+.env.*
+!.env.example
+
+# Local Docker override files.
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# --- Local Database Files ---
+# The SQLite database file and its related journal/WAL files.
+# The schema is managed by migration files in /db/migrations.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# --- Development Tools & Logs ---
+# Logs and temporary files from the 'Air' live-reloading tool.
+/tmp/
+air.log
+*.log
+
+# Go test coverage and profiling files.
+*.out
+*.prof
+*.test
+
+# --- IDE & Editor Configuration ---
+# User-specific settings for common editors.
+# Project-specific settings (.vscode/settings.json) can be committed if desired.
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains (GoLand, IntelliJ)
+.idea/
+
+# Vim & Neovim
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# --- Operating System Files ---
+# Files generated automatically by different operating systems.
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+__MACOSX/
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+
+# --- Miscellaneous ---
+# Other common files that should not be in the repository.
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.pem
+*.key
+.history

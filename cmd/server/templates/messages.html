@@ -1,0 +1,7 @@
+{{define "message-list"}}
+<ul id="message-list" class="mt-4 space-y-2">
+  {{range .}}
+  <li class="rounded-md bg-white px-4 py-2 shadow">{{.Content}}</li>
+  {{end}}
+</ul>
+{{end}}
