@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/dunamismax/go-stdlib-scaffold/internal/database"
 )

@@ -1,13 +1,12 @@
-name: CI
+name: Release
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - 'v*'
 
 jobs:
-  test:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,5 +21,11 @@ jobs:
       - name: Install Mage
         run: go install github.com/magefile/mage@latest
 
-      - name: Run All Checks
-        run: mage check:all
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

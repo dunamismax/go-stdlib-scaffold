@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
