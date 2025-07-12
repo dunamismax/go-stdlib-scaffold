@@ -3,77 +3,67 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"os"
-	"time"
+	"path/filepath"
+	"sort"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sql.DB
-
-// Connect initializes the database connection.
-func Connect() error {
-	dbPath := os.Getenv("APP_DB_PATH")
-	if dbPath == "" {
-		dbPath = "app.db" // Default path
-	}
-
-	var err error
-	DB, err = sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	return createMessagesTable()
-}
-
-func createMessagesTable() error {
-	_, err := DB.Exec(`
-		CREATE TABLE IF NOT EXISTS messages (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			content TEXT NOT NULL,
-			created_at DATETIME NOT NULL
-		)
-	`)
-	return err
-}
-
-// GetMessages retrieves all messages from the database.
-func GetMessages() ([]Message, error) {
-	rows, err := DB.Query("SELECT id, content, created_at FROM messages ORDER BY created_at DESC")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var messages []Message
-	for rows.Next() {
-		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.Content, &msg.CreatedAt); err != nil {
-			return nil, err
+// NewDB creates and returns a new database connection pool.
+func NewDB(dsn string) (*sql.DB, error) {
+	// Ensure the directory for the SQLite file exists.
+	dir := filepath.Dir(dsn)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create database directory: %w", err)
 		}
-		messages = append(messages, msg)
 	}
 
-	return messages, nil
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
+	}
+
+	// Ping the database to verify the connection is active.
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	return db, nil
 }
 
-// CreateMessage adds a new message to the database.
-func CreateMessage(content string) (*Message, error) {
-	now := time.Now()
-	result, err := DB.Exec("INSERT INTO messages (content, created_at) VALUES (?, ?)", content, now)
+// Migrate runs all .sql migrations from a given directory.
+func Migrate(db *sql.DB, migrationsDir string) error {
+	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to read migrations directory: %w", err)
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return nil, err
+	// Sort files to ensure they are executed in order.
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
+
+	for _, file := range files {
+		if file.IsDir() || filepath.Ext(file.Name()) != ".sql" {
+			continue
+		}
+
+		filePath := filepath.Join(migrationsDir, file.Name())
+		fmt.Printf("Applying migration: %s\n", file.Name())
+
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to read migration file %s: %w", file.Name(), err)
+		}
+
+		if _, err := db.Exec(string(content)); err != nil {
+			return fmt.Errorf("failed to apply migration %s: %w", file.Name(), err)
+		}
 	}
 
-	return &Message{
-		ID:        id,
-		Content:   content,
-		CreatedAt: now,
-	}, nil
+	return nil
 }

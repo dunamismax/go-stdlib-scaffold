@@ -5,7 +5,7 @@ import (
 	"embed"
 	"errors"
 	"html/template"
-	"log/slog"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,125 +15,147 @@ import (
 	"github.com/dunamismax/go-stdlib-scaffold/internal/database"
 )
 
-var (
-	//go:embed templates/*
-	templatesFS embed.FS
-)
+//go:embed templates/*.html
+var templatesFS embed.FS
+
+// application holds the application's dependencies.
+type application struct {
+	logger *log.Logger
+	store  *database.Store
+	tmpl   *template.Template
+}
 
 func main() {
-	// Setup logger
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
-	// Setup database
-	if err := database.Connect(); err != nil {
-		logger.Error("failed to setup database", "error", err)
-		os.Exit(1)
-	}
-
-	// Load templates
-	tmpl, err := template.ParseFS(templatesFS, "templates/*")
-	if err != nil {
-		logger.Error("failed to parse templates", "error", err)
-		os.Exit(1)
-	}
-
-	// Setup router
-	mux := http.NewServeMux()
-
-	// Static files
-	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./public/assets"))))
-
-	// Routes
-	mux.HandleFunc("/", handleIndex(tmpl))
-	mux.HandleFunc("/messages", handleCreateMessage(tmpl))
-
-	// Start server
+	// Configuration
 	port := os.Getenv("APP_SERVER_PORT")
 	if port == "" {
 		port = "3000"
 	}
-	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: loggingMiddleware(mux, logger),
+	dbPath := os.Getenv("APP_DB_PATH")
+	if dbPath == "" {
+		dbPath = "data/app.db"
 	}
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("listen and serve error", "error", err)
-		}
-	}()
+	// Dependencies
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	// Wait for interrupt signal to gracefully shutdown the server
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	logger.Info("shutting down server...")
+	db, err := database.NewDB(dbPath)
+	if err != nil {
+		logger.Fatalf("failed to connect to database: %v", err)
+	}
+	defer db.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	store := database.NewStore(db)
 
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("server shutdown failed", "error", err)
-		os.Exit(1)
+	tmpl, err := template.ParseFS(templatesFS, "templates/*.html")
+	if err != nil {
+		logger.Fatalf("failed to parse templates: %v", err)
 	}
 
-	logger.Info("server exited properly")
+	app := &application{
+		logger: logger,
+		store:  store,
+		tmpl:   tmpl,
+	}
+
+	// Start server
+	if err := app.serve(port); err != nil {
+		logger.Fatalf("server error: %v", err)
+	}
 }
 
-func loggingMiddleware(next http.Handler, logger *slog.Logger) http.Handler {
+// serve starts and gracefully shuts down the HTTP server.
+func (app *application) serve(port string) error {
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: app.routes(),
+	}
+
+	shutdownErr := make(chan error)
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		<-quit
+		app.logger.Println("shutting down server...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		shutdownErr <- srv.Shutdown(ctx)
+	}()
+
+	app.logger.Printf("starting server on port %s", port)
+	err := srv.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	err = <-shutdownErr
+	if err != nil {
+		return err
+	}
+
+	app.logger.Println("server stopped")
+	return nil
+}
+
+// routes registers all application routes.
+func (app *application) routes() http.Handler {
+	mux := http.NewServeMux()
+
+	// Serve static files from the 'public' directory.
+	mux.Handle("/css/", http.FileServer(http.Dir("./public")))
+
+	// Register application handlers.
+	mux.HandleFunc("GET /", app.handleIndex)
+	mux.HandleFunc("POST /messages", app.handleCreateMessage)
+
+	return app.loggingMiddleware(mux)
+}
+
+// loggingMiddleware logs incoming HTTP requests.
+func (app *application) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		next.ServeHTTP(w, r)
-		logger.Info("request",
-			"method", r.Method,
-			"path", r.URL.Path,
-			"duration", time.Since(start),
-		)
+		app.logger.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
 	})
 }
 
-func handleIndex(tmpl *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		messages, err := database.GetMessages()
-		if err != nil {
-			http.Error(w, "failed to get messages", http.StatusInternalServerError)
-			return
-		}
-		if err := tmpl.ExecuteTemplate(w, "index.html", messages); err != nil {
-			http.Error(w, "failed to execute template", http.StatusInternalServerError)
-		}
+// handleIndex renders the main page with all messages.
+func (app *application) handleIndex(w http.ResponseWriter, r *http.Request) {
+	messages, err := app.store.GetMessages()
+	if err != nil {
+		app.logger.Printf("error getting messages: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := app.tmpl.ExecuteTemplate(w, "index.html", messages); err != nil {
+		app.logger.Printf("error executing template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-func handleCreateMessage(tmpl *template.Template) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		content := r.FormValue("content")
-		if content == "" {
-			http.Error(w, "content is required", http.StatusBadRequest)
-			return
-		}
-
-		if _, err := database.CreateMessage(content); err != nil {
-			http.Error(w, "failed to create message", http.StatusInternalServerError)
-			return
-		}
-
-		messages, err := database.GetMessages()
-		if err != nil {
-			http.Error(w, "failed to get messages", http.StatusInternalServerError)
-			return
-		}
-
-		if err := tmpl.ExecuteTemplate(w, "messages.html", messages); err != nil {
-			http.Error(w, "failed to execute template", http.StatusInternalServerError)
-		}
+// handleCreateMessage handles the creation of a new message.
+func (app *application) handleCreateMessage(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
 	}
+
+	content := r.FormValue("content")
+	if content == "" {
+		http.Error(w, "Content cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := app.store.CreateMessage(content); err != nil {
+		app.logger.Printf("error creating message: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

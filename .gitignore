@@ -1,9 +1,8 @@
 # -----------------------------------------------------------------------------
-# .gitignore for go-stdlib-scaffold
+# .gitignore for The Pure Go Standard Library Stack
 #
 # This file is organized into sections for clarity and maintainability.
-# It covers build artifacts, local configurations, dependencies, and common
-# OS/IDE files to ensure the repository remains clean and secure.
+# It covers build artifacts, local configurations, and common OS/IDE files.
 # -----------------------------------------------------------------------------
 
 # --- Build Artifacts & Binaries ---
@@ -11,23 +10,12 @@
 /bin/
 /build/
 
-# Frontend build artifacts. These are generated from the /assets directory.
-/public/assets/
-
-# --- Dependencies ---
-# Node.js dependencies. These should be installed via `npm install`.
-/node_modules/
-
 # --- Local Configuration & Environment ---
 # Environment files contain sensitive credentials and should never be committed.
 # A `.env.example` file should be committed instead to define required variables.
 .env
 .env.*
 !.env.example
-
-# Local Docker override files.
-docker-compose.override.yml
-docker-compose.override.yaml
 
 # --- Local Database Files ---
 # The SQLite database file and its related journal/WAL files.
@@ -84,14 +72,3 @@ $RECYCLE.BIN/
 
 # Linux
 .directory
-
-# --- Miscellaneous ---
-# Other common files that should not be in the repository.
-.terraform/
-*.tfstate
-*.tfstate.*
-crash.log
-*.pem
-*.key
-.history
-/tmp/

@@ -3,27 +3,46 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
+
+	"github.com/dunamismax/go-stdlib-scaffold/internal/database"
 )
 
 func main() {
-	helloCmd := flag.NewFlagSet("hello", flag.ExitOnError)
-	name := helloCmd.String("name", "world", "the name to greet")
+	// Define command-line flags
+	dbPath := flag.String("db", "data/app.db", "Path to the SQLite database file.")
+	migrationsDir := flag.String("migrations", "internal/database/migrations", "Directory containing SQL migration files.")
+	flag.Parse()
 
-	if len(os.Args) < 2 {
-		fmt.Println("expected 'hello' subcommand")
-		os.Exit(1)
+	// Get the command
+	if flag.NArg() == 0 {
+		log.Fatal("Usage: cli <command>\nCommands: migrate")
 	}
+	command := flag.Arg(0)
 
-	switch os.Args[1] {
-	case "hello":
-		if err := helloCmd.Parse(os.Args[2:]); err != nil {
-			fmt.Printf("error parsing flags: %v\n", err)
-			os.Exit(1)
+	// Execute the command
+	switch command {
+	case "migrate":
+		if err := runMigrations(*dbPath, *migrationsDir); err != nil {
+			log.Fatalf("Migration failed: %v", err)
 		}
-		fmt.Printf("Hello, %s!\n", *name)
+		fmt.Println("Migrations applied successfully.")
 	default:
-		fmt.Println("expected 'hello' subcommand")
-		os.Exit(1)
+		log.Fatalf("Unknown command: %s", command)
 	}
+}
+
+func runMigrations(dbPath, migrationsDir string) error {
+	db, err := database.NewDB(dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+	defer db.Close()
+
+	if err := database.Migrate(db, migrationsDir); err != nil {
+		return fmt.Errorf("failed to run migrations: %w", err)
+	}
+
+	return nil
 }

@@ -1,45 +1,36 @@
-name: CI/CD
+name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+    - name: Tidy
+      run: go mod tidy
 
-      - name: Cache Go modules
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+    - name: Vet
+      run: go vet ./...
 
-      - name: Install Go Tools
-        run: go install github.com/magefile/mage && go install github.com/golangci/golangci-lint/cmd/golangci-lint && go install golang.org/x/vuln/cmd/govulncheck
+    - name: Test
+      run: go test -v ./...
 
-      - name: Install Node.js dependencies
-        run: npm install
+    - name: Vulnerability Scanner
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+        govulncheck ./...
 
-      - name: Run All Checks (Lint, Test, Vuln)
-        run: mage check
-
-      - name: Build Go Application
-        run: mage build:all
+    - name: Build
+      run: go build -v ./...

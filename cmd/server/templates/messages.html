@@ -1,7 +1,14 @@
-{{define "message-list"}}
-<ul id="message-list" class="mt-4 space-y-2">
-  {{range .}}
-  <li class="rounded-md bg-white px-4 py-2 shadow">{{.Content}}</li>
-  {{end}}
-</ul>
+{{define "messages.html"}}
+    {{if .}}
+        {{range .}}
+            <div class="message-card">
+                <p>{{.Content}}</p>
+                <div class="timestamp">{{.CreatedAt.Format "Jan 02, 2006 3:04 PM"}}</div>
+            </div>
+        {{end}}
+    {{else}}
+        <div class="empty-state">
+            <p>No messages yet. Be the first to leave one!</p>
+        </div>
+    {{end}}
 {{end}}
